@@ -24,6 +24,7 @@ var (
 	apiDefaultSecretKey  = common.GetEnv("SECRET_KEY", "")
 	apiDefaultLogTag     = os.Getenv("LOG_TAG")
 
+	apiDefaultAPIs               = strings.Split(common.GetEnv("APIS", "proposer,builder,data"), ",")
 	apiDefaultPprofEnabled       = os.Getenv("PPROF") == "1"
 	apiDefaultInternalAPIEnabled = os.Getenv("ENABLE_INTERNAL_API") == "1"
 
@@ -51,6 +52,7 @@ func init() {
 	apiCmd.Flags().StringVar(&apiBlockSimURL, "blocksim", apiDefaultBlockSim, "URL for block simulator")
 	apiCmd.Flags().StringVar(&network, "network", defaultNetwork, "Which network to use")
 
+	apiCmd.Flags().StringSliceVar(&enabledAPIs, "apis", apiDefaultAPIs, "APIs to enable")
 	apiCmd.Flags().BoolVar(&apiPprofEnabled, "pprof", apiDefaultPprofEnabled, "enable pprof API")
 	apiCmd.Flags().BoolVar(&apiInternalAPI, "internal-api", apiDefaultInternalAPIEnabled, "enable internal API (/internal/...)")
 }
@@ -125,11 +127,29 @@ var apiCmd = &cobra.Command{
 			EthNetDetails: *networkInfo,
 			BlockSimURL:   apiBlockSimURL,
 
-			ProposerAPI:     true,
-			BlockBuilderAPI: true,
-			DataAPI:         true,
+			ProposerAPI:     false,
+			BlockBuilderAPI: false,
+			DataAPI:         false,
 			InternalAPI:     apiInternalAPI,
 			PprofAPI:        apiPprofEnabled,
+		}
+
+		// Update APIs from cli
+		for _, name := range enabledAPIs {
+			switch name {
+			case "proposer":
+				opts.ProposerAPI = true
+			case "builder":
+				opts.BlockBuilderAPI = true
+			case "data":
+				opts.DataAPI = true
+			case "internal":
+				opts.InternalAPI = true
+			case "pprof":
+				opts.PprofAPI = true
+			default:
+				log.Fatalf("API " + name + " not recognized")
+			}
 		}
 
 		// Decode the private key

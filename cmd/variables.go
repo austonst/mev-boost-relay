@@ -14,6 +14,7 @@ var (
 	defaultLogJSON     = os.Getenv("LOG_JSON") != ""
 	defaultLogLevel    = common.GetEnv("LOG_LEVEL", "info")
 
+	enabledAPIs    []string
 	beaconNodeURIs []string
 	redisURI       string
 	postgresDSN    string
